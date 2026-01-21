@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  owner
+}
+
+enum CompanyStatus {
+  pending
+  approved
+  rejected
+}
+
+enum DsarStatus {
+  open
+  in_progress
+  in_review
+  closed
+}
+
+enum RepresentationRegion {
+  EU
+  UK
+  EU_UK
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+
+  company Company?
+}
+
+enum SubscriptionStatus {
+  inactive
+  trialing
+  active
+}
+
+model Company {
+  id          String               @id @default(uuid())
+  name        String
+  slug        String               @unique
+  logoUrl     String?
+  address     String
+  email       String
+  phone       String
+  employees   Int
+  fieldOfWork String
+  region      RepresentationRegion
+
+  status             CompanyStatus @default(pending)
+  stripeCustomerId   String?
+  subscriptionStatus SubscriptionStatus @default(inactive)
+  subscriptionEndsAt DateTime?
+
+  ownerId String @unique
+  owner   User   @relation(fields: [ownerId], references: [id])
+
+  dsarRequests DsarRequest[]
+
+  createdAt DateTime @default(now())
+}
+
+model DsarRequest {
+  id          String     @id @default(uuid())
+  fullName    String
+  email       String
+  requestType String
+  documentUrl String?
+  status      DsarStatus @default(open)
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+
+  createdAt DateTime @default(now())
+}
