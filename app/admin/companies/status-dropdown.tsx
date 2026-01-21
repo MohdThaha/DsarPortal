@@ -2,16 +2,18 @@
 
 import { useState } from "react"
 
+type CompanyStatus = "pending" | "approved" | "rejected"
+
 type Props = {
   companyId: string
-  current: "pending" | "approved" | "rejected"
+  current: CompanyStatus
 }
 
 export default function StatusDropdown({ companyId, current }: Props) {
-  const [status, setStatus] = useState(current)
+  const [status, setStatus] = useState<CompanyStatus>(current)
   const [loading, setLoading] = useState(false)
 
-  async function updateStatus(newStatus: string) {
+  async function updateStatus(newStatus: CompanyStatus) {
     setLoading(true)
     setStatus(newStatus)
 
@@ -31,7 +33,9 @@ export default function StatusDropdown({ companyId, current }: Props) {
     <select
       value={status}
       disabled={loading}
-      onChange={(e) => updateStatus(e.target.value)}
+      onChange={(e) =>
+        updateStatus(e.target.value as CompanyStatus)
+      }
       className="border rounded px-2 py-1 text-sm"
     >
       <option value="pending">Pending</option>

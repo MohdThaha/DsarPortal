@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt"
-import { prisma } from "@/database/prisma"
+import prisma from "@/database/prisma"
 
 export async function validateUser(email: string, password: string) {
   const user = await prisma.user.findUnique({

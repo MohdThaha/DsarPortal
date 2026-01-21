@@ -2,11 +2,20 @@ export const runtime = "nodejs"
 
 import { NextResponse } from "next/server"
 import prisma from "@/database/prisma"
+import { cookies } from "next/headers"
 
 export async function POST(req: Request) {
-  const { id, status } = await req.json()
+  const role = cookies().get("dsar_role")?.value
+  if (role !== "admin") {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    )
+  }
 
-  if (!id || !status) {
+  const { companyId, status } = await req.json()
+
+  if (!companyId || !status) {
     return NextResponse.json(
       { error: "Missing fields" },
       { status: 400 }
@@ -14,9 +23,9 @@ export async function POST(req: Request) {
   }
 
   await prisma.company.update({
-    where: { id },
+    where: { id: companyId },
     data: { status },
   })
 
-  return NextResponse.json({ message: "Company updated" })
+  return NextResponse.json({ success: true })
 }

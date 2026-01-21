@@ -1,19 +1,18 @@
 import prisma from "@/database/prisma"
+import { redirect } from "next/navigation"
 
-export default async function SuccessPage() {
+export default async function OwnerSuccessPage() {
   await prisma.company.updateMany({
-    where: { status: "approved" },
+    where: {
+      status: "approved",
+    },
     data: {
-      subscriptionActive: true,
+      subscriptionStatus: "active",
+      subscriptionEndsAt: new Date(
+        Date.now() + 30 * 24 * 60 * 60 * 1000 // +30 days
+      ),
     },
   })
 
-  return (
-    <div className="max-w-md mx-auto mt-16 text-center">
-      <h1 className="text-2xl font-bold mb-4">
-        Subscription Activated 🎉
-      </h1>
-      <p>Your company DSAR page is now live.</p>
-    </div>
-  )
+  redirect("/owner")
 }
