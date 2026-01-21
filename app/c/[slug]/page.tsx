@@ -1,77 +1,111 @@
-import prisma from "@/database/prisma"
-import Image from "next/image"
-import DsarsForm from "./dsar-form"
+"use client"
 
-export default async function PublicCompanyPage({
+import { useState } from "react"
+
+export default function PublicDsarPage({
   params,
 }: {
   params: { slug: string }
 }) {
-  const company = await prisma.company.findUnique({
-    where: { slug: params.slug },
-  })
+  const [fullName, setFullName] = useState("")
+  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
+  const [details, setDetails] = useState("")
+  const [message, setMessage] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  if (!company) {
-    return (
-      <div className="max-w-3xl mx-auto mt-20 text-center">
-        <h1 className="text-2xl font-bold">Company not found</h1>
-      </div>
-    )
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setMessage("")
+    setLoading(true)
+
+    const res = await fetch("/api/dsar-requests/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        slug: params.slug,
+        fullName,
+        email,
+        phone,
+        details,
+      }),
+    })
+
+    const data = await res.json()
+    setLoading(false)
+
+    if (!res.ok) {
+      setMessage(data.error || "Submission failed")
+      return
+    }
+
+    setMessage("✅ Your DSAR request has been submitted successfully.")
+    setFullName("")
+    setEmail("")
+    setPhone("")
+    setDetails("")
   }
 
-  const subscriptionActive =
-    company.subscriptionStatus === "active" ||
-    company.subscriptionStatus === "trialing"
-
-  const isActive = company.status === "approved" && subscriptionActive
-
   return (
-    <main className="min-h-screen bg-gray-50 py-14">
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="grid md:grid-cols-2 gap-12 items-start">
+    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="bg-white border rounded-lg p-8 max-w-lg w-full">
+        <h1 className="text-2xl font-bold mb-2">
+          Data Subject Access Request
+        </h1>
 
-          {/* LEFT — COMPANY INFO */}
-          <div className="bg-white border rounded-lg p-6 space-y-4">
-            {company.logoUrl && (
-              <Image
-                src={company.logoUrl}
-                alt="Company Logo"
-                width={140}
-                height={140}
-                className="object-contain bg-gray-50 p-3 rounded"
-              />
-            )}
+        <p className="text-sm text-gray-600 mb-6">
+          Submit a request to access, correct, or delete your personal data
+          held by this company.
+        </p>
 
-            <h1 className="text-2xl font-bold">{company.name}</h1>
+        {message && (
+          <p className="mb-4 text-sm font-medium">
+            {message}
+          </p>
+        )}
 
-            <div className="text-sm text-gray-600 space-y-1">
-              <p><strong>Field:</strong> {company.fieldOfWork}</p>
-              <p><strong>Employees:</strong> {company.employees}</p>
-              <p><strong>Region:</strong> {company.region}</p>
-              <p><strong>Contact:</strong> {company.email}</p>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            required
+            placeholder="Full name"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+          />
 
-            {!isActive && (
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-                This company’s DSAR portal is currently inactive.
-              </div>
-            )}
+          <input
+            required
+            type="email"
+            placeholder="Email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+          />
 
-            <p className="text-sm text-gray-500 pt-4 border-t">
-              Submit a Data Subject Access Request to access, correct,
-              or delete your personal data held by this organization.
-            </p>
-          </div>
+          <input
+            required
+            placeholder="Phone number"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+          />
 
-          {/* RIGHT — DSAR FORM */}
-          <div className="bg-white border rounded-lg p-8">
-            <DsarsForm
-              companyId={company.id}
-              disabled={!isActive}
-            />
-          </div>
+          <textarea
+            required
+            placeholder="Request details (e.g. Access, Delete, Correction)"
+            value={details}
+            onChange={(e) => setDetails(e.target.value)}
+            rows={4}
+            className="w-full border rounded px-3 py-2"
+          />
 
-        </div>
+          <button
+            disabled={loading}
+            className="w-full bg-black text-white py-2 rounded disabled:opacity-60"
+          >
+            {loading ? "Submitting..." : "Submit DSAR"}
+          </button>
+        </form>
       </div>
     </main>
   )
