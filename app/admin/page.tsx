@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import prisma from "@/database/prisma"
 import Link from "next/link"
 import { cookies } from "next/headers"

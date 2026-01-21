@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import prisma from "@/database/prisma"
 import CompanySearch from "./company-search"
 
